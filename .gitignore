@@ -5,3 +5,5 @@ db/
 TODO.md
 venv/
 .venv/
+tasks.txt
+.claude/
