@@ -62,6 +62,7 @@ def _write_session_log(content: str) -> None:
     _file_writer_tool._run(filename="log.txt", content=content)
 
 
+
 # ---------------------------------------------------------------------------
 # Crew
 # ---------------------------------------------------------------------------
@@ -123,13 +124,19 @@ class USStockAdvisor:
 
     # ── Tasks ────────────────────────────────────────────────────────────────
 
+    def _get_output_dir_path(self) -> Path:
+        """Return output directory as Path even if framework stores it as str."""
+        output_dir = Path(self._output_dir_path)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        return output_dir
+
     @task
     def news_collecting(self) -> Task:
         return Task(
             config=self.tasks_config["news_collecting"],
             agent=self.stock_news_researcher(),
             async_execution=True,
-            output_file=str(self._output_dir_path / "us_market_analysis.md"),
+            output_file=str(self._get_output_dir_path() / "us_market_analysis.md"),
         )
 
     @task
@@ -138,7 +145,7 @@ class USStockAdvisor:
             config=self.tasks_config["fundamental_analysis"],
             agent=self.fundamental_analyst(),
             async_execution=True,
-            output_file=str(self._output_dir_path / "fundamental_analysis.md"),
+            output_file=str(self._get_output_dir_path() / "fundamental_analysis.md"),
         )
 
     @task
@@ -147,7 +154,7 @@ class USStockAdvisor:
             config=self.tasks_config["technical_analysis"],
             agent=self.technical_analyst(),
             async_execution=True,
-            output_file=str(self._output_dir_path / "technical_analysis.md"),
+            output_file=str(self._get_output_dir_path() / "technical_analysis.md"),
         )
 
     @task
@@ -161,7 +168,7 @@ class USStockAdvisor:
                 self.technical_analysis(),
             ],
             output_json=InvestmentDecision,
-            output_file=str(self._output_dir_path / "final_decision.json"),
+            output_file=str(self._get_output_dir_path() / "final_decision.json"),
         )
 
     # ── Crew ─────────────────────────────────────────────────────────────────
@@ -178,9 +185,8 @@ class USStockAdvisor:
     # ── Output directory ─────────────────────────────────────────────────────
     # Class-level default keeps CrewBase's getattr introspection safe.
     # Call set_output_dir() in main.py to route outputs to a per-run folder.
-    _output_dir_path: Path = Path(__file__).parent.parent.parent / "output" / "default"
+    _output_dir_path: Path = Path("output/default")
 
     def set_output_dir(self, path: Path) -> "USStockAdvisor":
-        path.mkdir(parents=True, exist_ok=True)
-        self._output_dir_path = path
+        self._output_dir_path = Path(path)
         return self

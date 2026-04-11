@@ -19,14 +19,13 @@ from pathlib import Path
 # Allow running as a script from the src/ directory
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from stock_advisor.crew import USStockAdvisor
+from stock_advisor.crew import USStockAdvisor, _write_session_log
 from stock_advisor.pipeline import run_pipeline
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
-# Project root: two levels up from this file (src/stock_advisor/main.py)
-_PROJECT_ROOT = Path(__file__).parent.parent.parent
-_OUTPUT_ROOT = _PROJECT_ROOT / "output"
+
+_OUTPUT_ROOT = "output"
 
 
 def _parse_symbol() -> str:
@@ -41,19 +40,21 @@ def run() -> None:
     """Run the full pipeline for a given ticker symbol."""
     symbol = _parse_symbol()
     today = str(date.today())
-    output_dir = _OUTPUT_ROOT / f"{symbol}_{today}"
+    output_dir =  f"{_OUTPUT_ROOT}/{symbol}_{today}"
 
     print(f"[main] Analysing {symbol}  |  date={today}  |  output={output_dir}")
 
     inputs = {"symbol": symbol, "current_date": today}
 
     try:
-        USStockAdvisor().set_output_dir(output_dir).crew().kickoff(inputs=inputs)
+        crew_result = USStockAdvisor().set_output_dir(output_dir).crew().kickoff(inputs=inputs)
+        # Write session log
+        _write_session_log(str(crew_result))
     except Exception as e:
         raise RuntimeError(f"Crew execution failed: {e}") from e
 
     # Phase 2 & 3 — assemble report.md and generate PDF
-    run_pipeline(ticker=symbol, date=today)
+    run_pipeline(ticker=symbol, date=today, output_dir=output_dir)
     print(f"[main] Done. Outputs in {output_dir}")
 
 

@@ -19,12 +19,10 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-# Project root: two levels up from this file (src/stock_advisor/pipeline.py)
-_PROJECT_ROOT = Path(__file__).parent.parent.parent
-_OUTPUT_ROOT = _PROJECT_ROOT / "output"
 
 
-def run_pipeline(ticker: str, date: str) -> None:
+
+def run_pipeline(ticker: str, date: str, output_dir: Path) -> None:
     """
     Run Phase 2 (content_gen) and Phase 3 (pdf_generator) for the given ticker/date.
 
@@ -32,8 +30,6 @@ def run_pipeline(ticker: str, date: str) -> None:
         ticker: Stock ticker symbol (e.g., "TSLA")
         date: Date string in YYYY-MM-DD format (e.g., "2026-04-10")
     """
-    # Always resolve output path relative to project root
-    output_dir = _OUTPUT_ROOT / f"{ticker}_{date}"
 
     _generate_report_md(output_dir)
     _generate_pdf(output_dir)
