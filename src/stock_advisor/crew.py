@@ -7,7 +7,7 @@ from typing import List
 from crewai import Agent, Crew, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
-from crewai_tools import FirecrawlScrapeWebsiteTool, SerperDevTool, WebsiteSearchTool
+from crewai_tools import FirecrawlScrapeWebsiteTool, SerperDevTool, WebsiteSearchTool, FileWriterTool
 from dotenv import load_dotenv
 
 from .llm_config import llm_general, llm_reasoning
@@ -53,6 +53,13 @@ _web_search_tool = WebsiteSearchTool(
         }
     }
 )
+
+_file_writer_tool = FileWriterTool()
+
+
+def _write_session_log(content: str) -> None:
+    """Write the latest session log to log.txt."""
+    _file_writer_tool._run(filename="log.txt", content=content)
 
 
 # ---------------------------------------------------------------------------
