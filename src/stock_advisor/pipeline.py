@@ -19,6 +19,12 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+_CHART_FILENAMES = (
+    "{ticker}_price_line.jpg",
+    "{ticker}_revenue_bar.jpg",
+    "{ticker}_market_share_all.jpg",
+)
+
 
 
 
@@ -32,6 +38,9 @@ def run_pipeline(ticker: str, date: str, output_dir: Path | str) -> None:
     """
 
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    _ensure_required_charts(output_dir=output_dir, ticker=ticker)
 
     _generate_report_md(output_dir)
     _generate_pdf(output_dir)
@@ -67,11 +76,7 @@ def _generate_report_md(output_dir: Path) -> None:
     current = decision["current_price"]
 
     # Load charts if present
-    chart_names = [
-        f"{ticker}_price_line.jpg",
-        f"{ticker}_revenue_bar.jpg",
-        f"{ticker}_market_share_all.jpg",
-    ]
+    chart_names = [pattern.format(ticker=ticker) for pattern in _CHART_FILENAMES]
     images = []
     for name in chart_names:
         p = output_dir / name
@@ -332,6 +337,45 @@ def _generate_pdf(output_dir: Path) -> None:
     _html_to_pdf(html_path, pdf_path)
 
 
+def _ensure_required_charts(output_dir: Path, ticker: str) -> None:
+    """Generate missing chart artifacts inside the output directory."""
+    missing = [
+        name
+        for name in (pattern.format(ticker=ticker) for pattern in _CHART_FILENAMES)
+        if not (output_dir / name).exists()
+    ]
+    if not missing:
+        return
+
+    try:
+        from stock_advisor.tools.chart_tools import (
+            MarketShareAllPeersDonutTool,
+            RevenueBarChartTool,
+            StockPriceLineChartTool,
+        )
+    except Exception as exc:
+        print(f"[pipeline] Could not load chart tools to generate missing charts: {exc}")
+        return
+
+    cwd = Path.cwd()
+    try:
+        os.chdir(output_dir)
+        if f"{ticker}_price_line.jpg" in missing:
+            StockPriceLineChartTool()._run(ticker=ticker)
+        if f"{ticker}_revenue_bar.jpg" in missing:
+            RevenueBarChartTool()._run(ticker=ticker)
+        if f"{ticker}_market_share_all.jpg" in missing:
+            MarketShareAllPeersDonutTool()._run(ticker=ticker)
+    except Exception as exc:
+        print(f"[pipeline] Failed generating one or more charts for {ticker}: {exc}")
+    finally:
+        os.chdir(cwd)
+
+    still_missing = [name for name in missing if not (output_dir / name).exists()]
+    if still_missing:
+        print(f"[pipeline] Missing chart artifacts after generation: {', '.join(still_missing)}")
+
+
 def _html_to_pdf(html_path: Path, pdf_path: Path) -> None:
     """Convert HTML to PDF using pdfkit (cross-platform wkhtmltopdf detection)."""
     try:
@@ -342,7 +386,9 @@ def _html_to_pdf(html_path: Path, pdf_path: Path) -> None:
 
     wkhtmltopdf = _find_wkhtmltopdf()
     if wkhtmltopdf is None:
-        print("[pipeline] wkhtmltopdf not found — skipping PDF conversion.")
+        if _html_to_pdf_weasyprint(html_path, pdf_path):
+            return
+        print("[pipeline] wkhtmltopdf not found and WeasyPrint fallback unavailable — skipping PDF conversion.")
         return
 
     config = pdfkit.configuration(wkhtmltopdf=str(wkhtmltopdf))
@@ -357,6 +403,23 @@ def _html_to_pdf(html_path: Path, pdf_path: Path) -> None:
     }
     pdfkit.from_file(str(html_path), str(pdf_path), configuration=config, options=options)
     print(f"[pipeline] PDF written to {pdf_path}")
+
+
+def _html_to_pdf_weasyprint(html_path: Path, pdf_path: Path) -> bool:
+    """Fallback converter when wkhtmltopdf is not available."""
+    try:
+        from weasyprint import HTML
+    except Exception as exc:
+        print(f"[pipeline] WeasyPrint import failed: {exc}")
+        return False
+
+    try:
+        HTML(filename=str(html_path)).write_pdf(str(pdf_path))
+        print(f"[pipeline] PDF written to {pdf_path} (WeasyPrint fallback)")
+        return True
+    except Exception as exc:
+        print(f"[pipeline] WeasyPrint PDF conversion failed: {exc}")
+        return False
 
 
 def _find_wkhtmltopdf() -> Optional[Path]:
