@@ -7,7 +7,7 @@ from typing import List
 from crewai import Agent, Crew, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
-from crewai_tools import FirecrawlScrapeWebsiteTool, SerperDevTool, WebsiteSearchTool, FileWriterTool
+from crewai_tools import SerperDevTool, FileWriterTool
 from dotenv import load_dotenv
 
 from .llm_config import llm_general, llm_reasoning
@@ -37,21 +37,10 @@ _price_chart_tool = StockPriceLineChartTool()
 _revenue_chart_tool = RevenueBarChartTool()
 _market_share_tool = MarketShareAllPeersDonutTool()
 
-_scrape_tool = FirecrawlScrapeWebsiteTool(
-    timeout=60, api_key=os.getenv("FIRECRAWL_API_KEY")
-)
 _search_tool = SerperDevTool(
     country="us",
     locale="us",
     location="New York, New York, United States",
-)
-_web_search_tool = WebsiteSearchTool(
-    config={
-        "embedding_model": {
-            "provider": "ollama",
-            "config": {"model_name": "nomic-embed-text"},
-        }
-    }
 )
 
 _file_writer_tool = FileWriterTool()
@@ -82,8 +71,11 @@ class USStockAdvisor:
             config=self.agents_config["stock_news_researcher"],
             verbose=True,
             llm=llm_general,
-            tools=[_search_tool, _scrape_tool, _web_search_tool],
+            # Keep the news workflow on the stable path; Firecrawl/WebsiteSearch
+            # adapters are currently unreliable in this environment.
+            tools=[_search_tool],
             max_rpm=10,
+            max_iter=6,
         )
 
     @agent
@@ -94,6 +86,7 @@ class USStockAdvisor:
             llm=llm_general,
             tools=[_fund_tool, _sector_tool],
             max_rpm=10,
+            max_iter=6,
             embedder={
                 "provider": "ollama",
                 "config": {
@@ -111,6 +104,7 @@ class USStockAdvisor:
             llm=llm_general,
             tools=[_tech_tool, _revenue_chart_tool, _price_chart_tool, _market_share_tool],
             max_rpm=10,
+            max_iter=4,
         )
 
     @agent
@@ -120,6 +114,7 @@ class USStockAdvisor:
             verbose=True,
             llm=llm_reasoning,
             max_rpm=10,
+            max_iter=4,
         )
 
     # ── Tasks ────────────────────────────────────────────────────────────────

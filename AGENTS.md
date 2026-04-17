@@ -132,3 +132,17 @@ When fixing a tracked GitHub issue, follow this closeout flow in the same sessio
 3. Commit only the files related to that fix with an issue-referencing message.
 4. Push the commit to `origin`.
 5. Update or close the related GitHub issue when verification confirms the fix.
+
+## Verified Runtime Workflow
+
+Current stable run path:
+
+1. Activate venv: `source .venv/bin/activate`
+2. Run pipeline: `crewai run`
+3. Verify outputs under `output/{TICKER}_{DATE}/`
+
+Notes:
+- News agent currently uses Serper-only tooling for stability.
+- PDF output requires either:
+  - `wkhtmltopdf` available in PATH (or `WKHTMLTOPDF_PATH`), or
+  - WeasyPrint native deps installed (notably Pango/Cairo stack on macOS/Linux).
