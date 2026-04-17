@@ -22,7 +22,7 @@ from typing import Optional
 
 
 
-def run_pipeline(ticker: str, date: str, output_dir: Path) -> None:
+def run_pipeline(ticker: str, date: str, output_dir: Path | str) -> None:
     """
     Run Phase 2 (content_gen) and Phase 3 (pdf_generator) for the given ticker/date.
 
@@ -30,6 +30,8 @@ def run_pipeline(ticker: str, date: str, output_dir: Path) -> None:
         ticker: Stock ticker symbol (e.g., "TSLA")
         date: Date string in YYYY-MM-DD format (e.g., "2026-04-10")
     """
+
+    output_dir = Path(output_dir)
 
     _generate_report_md(output_dir)
     _generate_pdf(output_dir)

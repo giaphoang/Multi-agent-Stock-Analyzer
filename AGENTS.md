@@ -122,3 +122,13 @@ All outputs go to `output/{TICKER}_{DATE}/` relative to project root:
 
 ### Switch LLM provider
 Edit `.env`: `USE_LOCAL=false` for Gemini, `USE_LOCAL=true` (default) for Ollama.
+
+## Issue Workflow
+
+When fixing a tracked GitHub issue, follow this closeout flow in the same session:
+
+1. Implement the fix in code.
+2. Run the smallest meaningful verification (targeted run/test).
+3. Commit only the files related to that fix with an issue-referencing message.
+4. Push the commit to `origin`.
+5. Update or close the related GitHub issue when verification confirms the fix.
