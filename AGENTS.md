@@ -154,3 +154,4 @@ Notes:
 - PDF output requires either:
   - `wkhtmltopdf` available in PATH (or `WKHTMLTOPDF_PATH`), or
   - WeasyPrint native deps installed (notably Pango/Cairo stack on macOS/Linux).
+- Verification on April 17, 2026: `crewai run` completed successfully with `FINNHUB_API_KEY` and `WKHTMLTOPDF_PATH` configured.
