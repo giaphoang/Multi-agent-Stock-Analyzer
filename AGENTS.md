@@ -133,6 +133,14 @@ When fixing a tracked GitHub issue, follow this closeout flow in the same sessio
 4. Push the commit to `origin`.
 5. Update or close the related GitHub issue when verification confirms the fix.
 
+## Routine After Any Fix
+
+Apply this same workflow even when the work is not tied to a tracked issue:
+
+1. Re-run the affected command/tool path and confirm expected outputs exist in `output/{TICKER}_{DATE}/`.
+2. Commit only relevant files for that fix.
+3. Push immediately after the successful verification.
+
 ## Verified Runtime Workflow
 
 Current stable run path:
