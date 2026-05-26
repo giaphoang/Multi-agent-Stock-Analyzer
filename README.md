@@ -1,5 +1,4 @@
-# Multi-Agent Stock Analyzer
-
+# AutoER: Autonomous Equity Research
 A multi-agent AI system built on [CrewAI](https://crewai.com) that conducts end-to-end equity research — from macroeconomic news collection and financial analysis to technical charting and a final Buy/Hold/Sell recommendation — delivered as a professional PDF report.
 
 ---
